@@ -3,6 +3,10 @@
 # scanlan.py
 # 20210123
 
+# see about using the following to get the ip address
+# /sbin/ifconfig | grep broadcast | awk '{print $2}'
+# ip addr | grep brd | grep inet | awk '{print $2}'
+
 import os
 import socket
 
