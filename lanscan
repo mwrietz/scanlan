@@ -1,0 +1,84 @@
+#!/usr/bin/python3
+
+# 20240831
+
+import os
+import re
+import socket
+import subprocess
+
+def main():
+    print(f'Network Devices: {get_my_net_ip()}')
+    write_temp_file()
+    process_temp_file()
+
+def get_substring_in_parens(s):
+    match = re.search(r'\((.*?)\)', s)
+    return match.group(1) if match else None
+
+def run_command(command, output_file):
+    try:
+        result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
+        with open(output_file, 'w') as f:
+            f.write(result.stdout)
+
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e}")
+        with open(output_file, 'w') as f:
+            f.write(f"An error occurred: {e}\n")
+            f.write(f"Error output:\n{e.stderr}")
+        print(f"Error details have been written to {output_file}")
+
+def get_my_net_ip():
+    cmd = "ip addr | grep brd | grep inet | awk \'{print $2}\'"
+    output_file = "ipaddr.txt"
+    run_command(cmd, output_file)
+    with open(output_file, 'r') as f:
+        netip = f.read()
+    os.remove(output_file)
+    return netip
+
+def write_temp_file():
+    net = get_my_net_ip()
+    cmd = f"sudo nmap -sn {net}"
+    output_file = "temp.txt"
+    run_command(cmd, output_file)
+
+def process_temp_file():
+    device = []
+    host_ip = "" 
+    macaddress = "" 
+    hostname = "" 
+    manufacturer = ""
+    ifile = open('temp.txt', 'r')
+    count = 0
+    for line in ifile:
+        line = line.rstrip()
+        if line.startswith('Nmap'):
+            if line.endswith(")"):
+                hostname = line.split()[-2]
+            host_ip = line.split()[-1]
+            host_ip = host_ip.strip("()")
+        if line.startswith('MAC'):
+            macaddress = line.split()[2]
+            manufacturer = get_substring_in_parens(line) 
+        if len(host_ip) > 0 and len(macaddress) > 0:
+            device.append(host_ip)
+            device.append(manufacturer)
+            device.append(macaddress)
+            device.append(hostname)
+            print(f"{count:3}: ", end='')
+            print_device(device)
+            device = []
+            host_ip = "" 
+            macaddress = "" 
+            hostname = ""
+            manufacturer = ""
+            count += 1
+    os.remove('temp.txt')
+
+def print_device(devicelist):
+    print(f'{devicelist[0]:18} {devicelist[3]:20} {devicelist[1]:24} {devicelist[2]:19}')
+
+if __name__ == '__main__':
+    main()

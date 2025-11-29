@@ -25,6 +25,7 @@ def get_my_net_ip():
     f = open('ipaddr.txt')
     lines = f.readlines()
     f.close()
+    netip = ""
     for line in lines:
         if IPAddr in line:
             net = line.split()[1]

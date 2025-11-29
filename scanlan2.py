@@ -54,7 +54,7 @@ def process_temp_file():
             host_ip = ''
             macaddress = ''
             name = ''
-    os.remove('temp.txt')
+    #os.remove('temp.txt')
 
 def print_device(devicelist):
     print(f'{devicelist[0]:24} {devicelist[1]:16} {devicelist[2]}')
